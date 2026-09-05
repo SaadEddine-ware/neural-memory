@@ -10,5 +10,8 @@
       "database_name": "neural-memory-db",
       "database_id": "dd06f232-c852-41a7-9ddf-7e843835d8b1"
     }
-  ]
+  ],
+  "ai": {
+    "binding": "AI"
+  }
 }
