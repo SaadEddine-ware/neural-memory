@@ -19,26 +19,45 @@ const DEFAULT_RETENTION: Omit<RetentionSettings, 'user_id'> = {
   auto_delete_expired: false,
 };
 
+interface UserSettingsRow {
+  id: string;
+  user_id: string;
+  similarity_threshold: number;
+  switch_confirmed_count: number;
+  switch_rejected_count: number;
+  total_confirmations: number;
+  default_duration_days: number;
+  subject_duration_days: number;
+  action_duration_days: number;
+  sub_action_duration_days: number;
+  prompt_answer_duration_days: number;
+  auto_delete_expired: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export async function getRetentionSettings(
   db: D1Database,
   userId: string
 ): Promise<RetentionSettings> {
-  const existing = await db
+  const row = await db
     .prepare('SELECT * FROM user_settings WHERE user_id = ?')
     .bind(userId)
-    .first<{ user_id: string }>();
+    .first<UserSettingsRow>();
 
-  if (existing) {
+  if (row) {
     return {
       user_id: userId,
-      ...DEFAULT_RETENTION,
+      default_duration_days: row.default_duration_days ?? DEFAULT_RETENTION.default_duration_days,
+      subject_duration_days: row.subject_duration_days ?? DEFAULT_RETENTION.subject_duration_days,
+      action_duration_days: row.action_duration_days ?? DEFAULT_RETENTION.action_duration_days,
+      sub_action_duration_days: row.sub_action_duration_days ?? DEFAULT_RETENTION.sub_action_duration_days,
+      prompt_answer_duration_days: row.prompt_answer_duration_days ?? DEFAULT_RETENTION.prompt_answer_duration_days,
+      auto_delete_expired: (row.auto_delete_expired ?? 0) === 1,
     };
   }
 
-  return {
-    user_id: userId,
-    ...DEFAULT_RETENTION,
-  };
+  return { user_id: userId, ...DEFAULT_RETENTION };
 }
 
 export async function updateRetentionSettings(
@@ -50,19 +69,53 @@ export async function updateRetentionSettings(
   const updated = { ...current, ...settings };
 
   const now = new Date().toISOString();
-  await db
-    .prepare(
-      `INSERT OR REPLACE INTO user_settings (id, user_id, similarity_threshold, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)`
-    )
-    .bind(
-      crypto.randomUUID(),
-      userId,
-      0.6,
-      now,
-      now
-    )
-    .run();
+
+  const existing = await db
+    .prepare('SELECT id FROM user_settings WHERE user_id = ?')
+    .bind(userId)
+    .first<{ id: string }>();
+
+  if (existing) {
+    await db
+      .prepare(
+        `UPDATE user_settings 
+         SET default_duration_days = ?, subject_duration_days = ?, action_duration_days = ?,
+             sub_action_duration_days = ?, prompt_answer_duration_days = ?, auto_delete_expired = ?,
+             updated_at = ?
+         WHERE user_id = ?`
+      )
+      .bind(
+        updated.default_duration_days,
+        updated.subject_duration_days,
+        updated.action_duration_days,
+        updated.sub_action_duration_days,
+        updated.prompt_answer_duration_days,
+        updated.auto_delete_expired ? 1 : 0,
+        now,
+        userId
+      )
+      .run();
+  } else {
+    await db
+      .prepare(
+        `INSERT INTO user_settings (id, user_id, similarity_threshold, default_duration_days, subject_duration_days, action_duration_days, sub_action_duration_days, prompt_answer_duration_days, auto_delete_expired, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        crypto.randomUUID(),
+        userId,
+        0.6,
+        updated.default_duration_days,
+        updated.subject_duration_days,
+        updated.action_duration_days,
+        updated.sub_action_duration_days,
+        updated.prompt_answer_duration_days,
+        updated.auto_delete_expired ? 1 : 0,
+        now,
+        now
+      )
+      .run();
+  }
 
   return updated;
 }

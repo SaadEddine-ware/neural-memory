@@ -34,21 +34,3 @@ export function findMostSimilar(
 
   return results.sort((a, b) => b.similarity - a.similarity);
 }
-
-export function isContextSwitch(
-  similarity: number,
-  threshold: number
-): boolean {
-  return similarity <= threshold;
-}
-
-export function shouldAskUser(
-  similarity: number,
-  threshold: number,
-  highThreshold: number = 0.8
-): boolean {
-  if (similarity > highThreshold) {
-    return false;
-  }
-  return similarity <= threshold;
-}

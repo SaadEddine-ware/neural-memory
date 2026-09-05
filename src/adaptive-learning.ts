@@ -73,36 +73,6 @@ export async function getUserPattern(
   };
 }
 
-export async function updatePatternBasedThreshold(
-  db: D1Database,
-  userId: string
-): Promise<number> {
-  const pattern = await getUserPattern(db, userId);
-
-  let recommendedThreshold = 0.6;
-
-  if (pattern.focus_score > 0.8) {
-    recommendedThreshold = 0.5;
-  } else if (pattern.focus_score < 0.4) {
-    recommendedThreshold = 0.7;
-  }
-
-  const settings = await db
-    .prepare('SELECT * FROM user_settings WHERE user_id = ?')
-    .bind(userId)
-    .first<UserSettings>();
-
-  if (settings) {
-    const now = new Date().toISOString();
-    await db
-      .prepare('UPDATE user_settings SET similarity_threshold = ?, updated_at = ? WHERE user_id = ?')
-      .bind(recommendedThreshold, now, userId)
-      .run();
-  }
-
-  return recommendedThreshold;
-}
-
 export async function getTopicSuggestions(
   db: D1Database,
   userId: string,

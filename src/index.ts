@@ -76,7 +76,6 @@ import {
 } from './linking';
 import {
   getUserPattern,
-  updatePatternBasedThreshold,
   getTopicSuggestions,
   getSessionStats,
 } from './adaptive-learning';
@@ -677,12 +676,6 @@ export default {
         }
         const pattern = await getUserPattern(env.DB, userId);
         return jsonResponse(pattern);
-      }
-
-      if (path === '/api/adaptive/threshold' && method === 'POST') {
-        const body = (await request.json()) as { user_id: string };
-        const threshold = await updatePatternBasedThreshold(env.DB, body.user_id);
-        return jsonResponse({ threshold });
       }
 
       if (path === '/api/adaptive/topics' && method === 'GET') {

@@ -42,6 +42,12 @@ export interface UserSettings {
   switch_confirmed_count: number;
   switch_rejected_count: number;
   total_confirmations: number;
+  default_duration_days: number;
+  subject_duration_days: number;
+  action_duration_days: number;
+  sub_action_duration_days: number;
+  prompt_answer_duration_days: number;
+  auto_delete_expired: number;
   created_at: string;
   updated_at: string;
 }

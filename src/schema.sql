@@ -54,6 +54,12 @@ CREATE TABLE IF NOT EXISTS user_settings (
     switch_confirmed_count INTEGER DEFAULT 0,
     switch_rejected_count INTEGER DEFAULT 0,
     total_confirmations INTEGER DEFAULT 0,
+    default_duration_days INTEGER DEFAULT 30,
+    subject_duration_days INTEGER DEFAULT 365,
+    action_duration_days INTEGER DEFAULT 180,
+    sub_action_duration_days INTEGER DEFAULT 90,
+    prompt_answer_duration_days INTEGER DEFAULT 30,
+    auto_delete_expired INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

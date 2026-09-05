@@ -1,44 +1,23 @@
 import { Bindings } from './types';
 
 export async function computeEmbedding(text: string, ai?: Bindings['AI']): Promise<Float32Array> {
-  if (ai) {
-    try {
-      const response = await ai.run('@cf/baai/bge-base-en-v1.5', {
-        text: [text],
-      });
-      const embeddings = (response as any).data;
-      return new Float32Array(embeddings[0]);
-    } catch (e) {
-      console.warn('Workers AI embedding failed, using fallback:', e);
-    }
+  if (!ai) {
+    throw new Error(
+      'Workers AI binding is required for embeddings. ' +
+      'Add "ai" binding to wrangler.jsonc: { "ai": { "binding": "AI" } }'
+    );
   }
 
-  return fallbackEmbedding(text);
-}
+  const response = await ai.run('@cf/baai/bge-base-en-v1.5', {
+    text: [text],
+  });
 
-function fallbackEmbedding(text: string): Float32Array {
-  const dim = 384;
-  const embedding = new Float32Array(dim);
-  const words = text.toLowerCase().split(/\s+/);
-
-  for (let i = 0; i < dim; i++) {
-    let sum = 0;
-    for (const word of words) {
-      const charSum = Array.from(word).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-      sum += Math.sin(charSum * (i + 1) * 0.1) * 0.5;
-      sum += Math.cos(charSum * (i + 1) * 0.01) * 0.3;
-    }
-    embedding[i] = sum / Math.max(words.length, 1);
+  const embeddings = (response as any).data;
+  if (!embeddings || !embeddings[0]) {
+    throw new Error('Workers AI returned empty embedding response');
   }
 
-  const norm = Math.sqrt(embedding.reduce((acc, v) => acc + v * v, 0));
-  if (norm > 0) {
-    for (let i = 0; i < dim; i++) {
-      embedding[i] /= norm;
-    }
-  }
-
-  return embedding;
+  return new Float32Array(embeddings[0]);
 }
 
 export function embeddingToBuffer(embedding: Float32Array): ArrayBuffer {
