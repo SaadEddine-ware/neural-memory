@@ -4,7 +4,8 @@ export async function computeEmbedding(text: string, ai?: Bindings['AI']): Promi
   if (!ai) {
     throw new Error(
       'Workers AI binding is required for embeddings. ' +
-      'Add "ai" binding to wrangler.jsonc: { "ai": { "binding": "AI" } }'
+      'Add to wrangler.jsonc: { "ai": { "binding": "AI" } } ' +
+      'and set CLOUDFLARE_API_TOKEN for remote mode.'
     );
   }
 

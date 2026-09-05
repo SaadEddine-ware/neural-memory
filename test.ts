@@ -31,10 +31,63 @@ async function run() {
   console.log('\n🧠 Neural Memory System - Test Suite\n');
 
   // ========== HEALTH ==========
-  console.log('Health:');
+  console.log('\nHealth:');
   await test('GET /api/health', async () => {
     const { data } = await api('GET', '/api/health');
     assert(data.status === 'ok', 'Status not ok');
+  });
+
+  // ========== EMBEDDING ==========
+  console.log('\nEmbedding:');
+  let emb1 = '';
+  let emb2 = '';
+
+  await test('POST /api/embed (single text)', async () => {
+    const { status, data } = await api('POST', '/api/embed', {
+      text: 'building neural memory systems',
+    });
+    assert(status === 200, 'Status not 200');
+    assert(data.embedding, 'No embedding');
+    assert(data.dimensions >= 300, 'Dimensions too low: ' + data.dimensions);
+    emb1 = data.embedding;
+  });
+
+  await test('POST /api/embed (similar text)', async () => {
+    const { status, data } = await api('POST', '/api/embed', {
+      text: 'constructing neural memory architectures',
+    });
+    assert(status === 200, 'Status not 200');
+    emb2 = data.embedding;
+  });
+
+  await test('POST /api/embed (unrelated text)', async () => {
+    const { status, data } = await api('POST', '/api/embed', {
+      text: 'baking sourdough bread recipe',
+    });
+    assert(status === 200, 'Status not 200');
+    assert(data.dimensions >= 300, 'Dimensions too low');
+  });
+
+  await test('Similar pair scores higher than unrelated pair', async () => {
+    assert(emb1 && emb2, 'Embeddings not captured from earlier tests');
+
+    const similarScore = await api('POST', '/api/context/compare', {
+      query_embedding: emb1,
+      target_embedding: emb2,
+    });
+
+    const unrelatedEmb = await api('POST', '/api/embed', {
+      text: 'baking sourdough bread recipe',
+    });
+    const unrelatedScore = await api('POST', '/api/context/compare', {
+      query_embedding: emb1,
+      target_embedding: unrelatedEmb.data.embedding,
+    });
+
+    assert(
+      similarScore.data.similarity > unrelatedScore.data.similarity,
+      `Similar (${similarScore.data.similarity}) should score higher than unrelated (${unrelatedScore.data.similarity})`
+    );
   });
 
   // ========== SESSIONS ==========
