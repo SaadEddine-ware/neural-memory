@@ -1,0 +1,30 @@
+{
+  "name": "neural-memory",
+  "version": "1.0.0",
+  "description": "Neural Memory System - Brain-inspired AI memory for opencode",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 execute neural-memory-db --local --file=./src/schema.sql",
+    "db:remote": "wrangler d1 execute neural-memory-db --remote --file=./src/schema.sql",
+    "db:local:reset": "wrangler d1 execute neural-memory-db --local --file=./src/schema.sql --command='DROP TABLE IF EXISTS memories; DROP TABLE IF EXISTS goals; DROP TABLE IF EXISTS sessions; DROP TABLE IF EXISTS user_settings;' && wrangler d1 execute neural-memory-db --local --file=./src/schema.sql"
+  },
+  "keywords": [
+    "memory",
+    "ai",
+    "cloudflare",
+    "d1",
+    "opencode"
+  ],
+  "author": "Saad",
+  "license": "ISC",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260904.1",
+    "typescript": "^5.0.0",
+    "wrangler": "^4.129.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0"
+  }
+}
